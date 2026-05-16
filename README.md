@@ -1,4 +1,4 @@
-# Pixoo ADSB
+<img src="logo.png" width="500">
 
 A real-time ADS-B dashboard for the [Divoom Pixoo64](https://www.divoom.com/products/pixoo-64) that tracks the nearest aircraft from a local [dump1090](https://github.com/flightaware/dump1090) receiver and displays live flight data on the 64×64 LED matrix. Route data is enriched automatically via free public APIs, with airline logos fetched and cached from FlightAware's CDN.
 
