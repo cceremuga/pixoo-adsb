@@ -90,7 +90,7 @@ def compose(
     f10 = _font(10)
     f8 = _font(8)
 
-    img.paste(logo.resize((16, 16), Image.LANCZOS), (2, 4))
+    img.paste(logo.resize((16, 16), Image.NEAREST), (2, 4))
 
     flight = aircraft.display_name
     avail = W - 19

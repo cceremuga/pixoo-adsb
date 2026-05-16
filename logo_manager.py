@@ -57,7 +57,7 @@ class LogoManager:
                 return (
                     Image.open(cache_path)
                     .convert("RGB")
-                    .resize(LOGO_SIZE, Image.LANCZOS)
+                    .resize(LOGO_SIZE, Image.NEAREST)
                 )
             except Exception:
                 os.remove(cache_path)
@@ -82,7 +82,7 @@ class LogoManager:
                 img = Image.open(BytesIO(resp.content)).convert("RGBA")
                 bg = Image.new("RGB", img.size, (0, 0, 0))
                 bg.paste(img, mask=img.split()[3])
-                return bg.resize(LOGO_SIZE, Image.LANCZOS)
+                return bg.resize(LOGO_SIZE, Image.NEAREST)
             except Exception as e:
                 log.debug("logo fetch failed (%s): %s", url, e)
         return None
