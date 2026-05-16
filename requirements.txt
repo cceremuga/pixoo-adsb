@@ -1,7 +1,9 @@
 Pillow
+pygame
 requests
 haversine
 diskcache
+airportsdata
 black
 isort
 mdformat

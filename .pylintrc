@@ -11,7 +11,8 @@ disable =
     ungrouped-imports,
     broad-exception-caught,
     unused-argument,
-    too-many-instance-attributes
+    too-many-instance-attributes,
+    duplicate-code
 
 [FORMAT]
 max-line-length = 88
@@ -21,4 +22,4 @@ max-args = 8
 max-locals = 20
 
 [TYPECHECK]
-ignored-modules = PIL
+ignored-modules = PIL,pygame

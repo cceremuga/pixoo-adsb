@@ -3,7 +3,7 @@
     "host": "192.168.1.100",
     "port": 8080,
     "path": "/data/aircraft.json",
-    "poll_interval": 10,
+    "poll_interval": 15,
     "receiver_lat": 0.0,
     "receiver_lon": 0.0
   },
@@ -18,7 +18,8 @@
   "flight_data": {
     "enabled": true,
     "cache_dir": "cache/routes",
-    "cache_ttl_seconds": 3600
+    "cache_ttl_seconds": 86400,
+    "aerodatabox_key": ""
   },
   "display": {
     "color_flight": [255, 255, 255],

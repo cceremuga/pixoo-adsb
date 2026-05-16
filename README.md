@@ -39,6 +39,7 @@ All settings live in `config.json`. See `sample.config.json` for a fully annotat
 | `display` | `color_route` | RGB array for origin/destination |
 | `display` | `color_data` | RGB array for altitude and speed |
 | `flight_data` | `enabled` | Toggle route enrichment on/off |
+| `flight_data` | `aerodatabox_key` | api.market key for AeroDataBox (optional, improves accuracy) |
 
 ## Display Layout
 
@@ -58,12 +59,36 @@ When no route is found, the aircraft tail number is shown in place of origin/des
 
 ## Route Enrichment
 
-Routes are looked up automatically using two free, no-key-required APIs:
+Routes are looked up automatically and cached to disk for the duration configured in `flight_data.cache_ttl_seconds`.
 
-1. **[HexDB](https://hexdb.io)** — primary
-1. **[AdsbDB](https://adsbdb.com)** — fallback
+### Free (no key required)
 
-Results are cached to disk for the duration configured in `flight_data.cache_ttl_seconds`.
+1. **[HexDB](https://hexdb.io)** — static callsign→route database
+1. **[AdsbDB](https://adsbdb.com)** — fallback static database
+
+These work without any configuration but rely on static data that can be stale or missing for newer/regional flights.
+
+### Optional: AeroDataBox via api.market (paid)
+
+For significantly better route accuracy, you can enable [AeroDataBox](https://api.market/store/aedbx/aerodatabox) through [api.market](https://api.market). It queries live flight data for today and yesterday, making it much more reliable for routes that static databases miss.
+
+1. Sign up at [api.market](https://api.market) and subscribe to the AeroDataBox API
+2. Copy your API key and add it to `config.json`:
+
+```json
+"flight_data": {
+  "aerodatabox_key": "your-api-market-key-here"
+}
+```
+
+When a key is present, AeroDataBox is tried first; the free APIs serve as fallback. Remove the key or leave it empty to use only the free sources.
+
+The configuration table also includes:
+
+| Section | Key | Description |
+|---|---|---|
+| `flight_data` | `aerodatabox_key` | api.market key for AeroDataBox (optional) |
+| `flight_data` | `cache_ttl_seconds` | How long to cache route results (default: 3600) |
 
 ______________________________________________________________________
 

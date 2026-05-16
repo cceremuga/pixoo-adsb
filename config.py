@@ -43,6 +43,7 @@ class FlightDataConfig:
     enabled: bool = True
     cache_dir: str = "cache/routes"
     cache_ttl_seconds: int = 3600
+    aerodatabox_key: str = ""
 
 
 @dataclass
@@ -106,6 +107,7 @@ def load(path: str = "config.json") -> Config:
             cache_ttl_seconds=get(
                 fd, "cache_ttl_seconds", d.flight_data.cache_ttl_seconds
             ),
+            aerodatabox_key=get(fd, "aerodatabox_key", d.flight_data.aerodatabox_key),
         ),
         display=DisplayConfig(
             color_flight=color(di, "color_flight", d.display.color_flight),

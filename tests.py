@@ -186,10 +186,12 @@ class TestCompose(unittest.TestCase):
 
 
 class TestFlightEnricher(unittest.TestCase):
-    def _enricher(self):
+    def _enricher(self, aerodatabox=False):
         cfg = Config()
         cfg.flight_data.enabled = True
         cfg.flight_data.cache_dir = tempfile.mkdtemp()
+        if aerodatabox:
+            cfg.flight_data.aerodatabox_key = "test-key"
         return FlightEnricher(cfg)
 
     def test_returns_unknown_when_disabled(self):
@@ -203,30 +205,61 @@ class TestFlightEnricher(unittest.TestCase):
         e = self._enricher()
         self.assertEqual(e.get_route("aabbcc", ""), ("???", "???"))
 
+    def _aerodatabox_ok(self, origin_iata, dest_iata):
+        r = MagicMock()
+        r.status_code = 200
+        r.json.return_value = [
+            {
+                "departure": {
+                    "airport": {"iata": origin_iata, "icao": f"K{origin_iata}"}
+                },
+                "arrival": {"airport": {"iata": dest_iata, "icao": f"K{dest_iata}"}},
+            }
+        ]
+        return r
+
+    def test_aerodatabox_route_parsed(self):
+        e = self._enricher(aerodatabox=True)
+        with patch(
+            "requests.Session.get",
+            return_value=self._aerodatabox_ok("CVG", "BOS"),
+        ):
+            origin, dest = e.get_route("aabbcc", "RPA5789")
+        self.assertEqual(origin, "CVG")
+        self.assertEqual(dest, "BOS")
+
+    def test_aerodatabox_skipped_without_key(self):
+        e = self._enricher(aerodatabox=False)
+        hexdb_resp = MagicMock()
+        hexdb_resp.status_code = 200
+        hexdb_resp.json.return_value = {"route": "KBOS-KLAX"}
+        with patch("requests.Session.get", return_value=hexdb_resp) as mock_get:
+            origin, _ = e.get_route("aabbcc", "SWA1234")
+        self.assertEqual(mock_get.call_count, 1)
+        self.assertEqual(origin, "BOS")
+
     def test_hexdb_route_parsed(self):
         e = self._enricher()
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.json.return_value = {"route": "KBOS-KLAX"}
-        with patch("requests.Session.get", return_value=mock_resp):
+        hexdb_resp = MagicMock()
+        hexdb_resp.status_code = 200
+        hexdb_resp.json.return_value = {"route": "KBOS-KLAX"}
+        with patch("requests.Session.get", return_value=hexdb_resp):
             origin, dest = e.get_route("aabbcc", "SWA1234")
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
 
     def test_result_cached_after_first_lookup(self):
         e = self._enricher()
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.json.return_value = {"route": "KBOS-KLAX"}
-        with patch("requests.Session.get", return_value=mock_resp) as mock_get:
+        hexdb_resp = MagicMock()
+        hexdb_resp.status_code = 200
+        hexdb_resp.json.return_value = {"route": "KBOS-KLAX"}
+        with patch("requests.Session.get", return_value=hexdb_resp) as mock_get:
             e.get_route("aabbcc", "SWA1234")
             e.get_route("aabbcc", "SWA1234")
         self.assertEqual(mock_get.call_count, 1)
 
     def test_falls_back_to_adsbdb_on_hexdb_failure(self):
         e = self._enricher()
-        fail_resp = MagicMock()
-        fail_resp.status_code = 404
         adsbdb_resp = MagicMock()
         adsbdb_resp.status_code = 200
         adsbdb_resp.json.return_value = {
@@ -237,7 +270,9 @@ class TestFlightEnricher(unittest.TestCase):
                 }
             }
         }
-        with patch("requests.Session.get", side_effect=[fail_resp, adsbdb_resp]):
+        fail = MagicMock()
+        fail.status_code = 404
+        with patch("requests.Session.get", side_effect=[fail, adsbdb_resp]):
             origin, dest = e.get_route("aabbcc", "SWA1234")
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
@@ -247,8 +282,11 @@ class TestIcaoToDisplay(unittest.TestCase):
     def test_k_prefix_stripped(self):
         self.assertEqual(_icao_to_display("KBOS"), "BOS")
 
-    def test_non_k_prefix_truncated_to_3(self):
-        self.assertEqual(_icao_to_display("EGLL"), "EGL")
+    def test_c_prefix_stripped(self):
+        self.assertEqual(_icao_to_display("CYUL"), "YUL")
+
+    def test_european_airport_returns_iata(self):
+        self.assertEqual(_icao_to_display("EGLL"), "LHR")
 
     def test_empty_returns_unknown(self):
         self.assertEqual(_icao_to_display(""), "???")
