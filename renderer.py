@@ -24,7 +24,10 @@ _FONT_PATH = os.path.join(
 @functools.lru_cache(maxsize=8)
 def _font(size: int) -> ImageFont.ImageFont:
     if os.path.exists(_FONT_PATH):
-        return ImageFont.truetype(_FONT_PATH, size)
+        try:
+            return ImageFont.truetype(_FONT_PATH, size)
+        except OSError as e:
+            log.warning("Failed to load font %s: %s", _FONT_PATH, e)
     try:
         return ImageFont.load_default(size=size)
     except TypeError:
@@ -93,7 +96,7 @@ def compose(
     avail = W - 19
     while flight and d.textbbox((0, 0), flight, font=f10)[2] > avail:
         flight = flight[:-1]
-    d.text((18, 1), flight, fill=c.color_flight, font=f10)
+    d.text((18, 0), flight, fill=c.color_flight, font=f10)
 
     if aircraft.distance_km:
         d.text(
@@ -115,7 +118,7 @@ def compose(
         route = aircraft.registration or aircraft.hex.upper()
     d.text((2, 24), route.upper(), fill=c.color_route, font=f10)
 
-    _sep(d, 37)
+    _sep(d, 38)
 
     alt_str = _alt_str(aircraft.altitude_ft, c.fl_transition_ft)
     spd_str = f"{aircraft.speed_kts} KT" if aircraft.speed_kts is not None else "-- KT"
