@@ -41,7 +41,7 @@ def _draw_text_centre(draw, text, y, font, colour):
 
 
 def _sep(draw, y):
-    draw.line([(0, y), (W - 1, y)], fill=(35, 35, 35))
+    draw.line([(0, y), (W - 1, y)], fill=(30, 30, 30))
 
 
 class Renderer:
@@ -90,17 +90,17 @@ def compose(
     f10 = _font(10)
     f8 = _font(8)
 
-    img.paste(logo.resize((16, 16), Image.LANCZOS), (1, 4))
+    img.paste(logo.resize((16, 16), Image.LANCZOS), (2, 4))
 
     flight = aircraft.display_name
     avail = W - 19
     while flight and d.textbbox((0, 0), flight, font=f10)[2] > avail:
         flight = flight[:-1]
-    d.text((18, 0), flight, fill=c.color_flight, font=f10)
+    d.text((21, 0), flight, fill=c.color_flight, font=f10)
 
     if aircraft.distance_km:
         d.text(
-            (18, 12),
+            (21, 12),
             _dist_str(aircraft.distance_km, c.distance_unit),
             fill=c.color_flight,
             font=f8,
