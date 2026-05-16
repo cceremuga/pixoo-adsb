@@ -1,5 +1,6 @@
 import functools
 import logging
+import os
 import time
 from typing import Optional
 
@@ -15,8 +16,15 @@ W = H = 64
 _FORCE_REFRESH_SECS = 60
 
 
+_FONT_PATH = os.path.join(
+    os.path.dirname(__file__), "fonts", "JetBrainsMonoNL-Regular.ttf"
+)
+
+
 @functools.lru_cache(maxsize=8)
 def _font(size: int) -> ImageFont.ImageFont:
+    if os.path.exists(_FONT_PATH):
+        return ImageFont.truetype(_FONT_PATH, size)
     try:
         return ImageFont.load_default(size=size)
     except TypeError:
@@ -76,8 +84,6 @@ def compose(
     img = Image.new("RGB", (W, H), (0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    f12 = _font(12)
-    f11 = _font(11)
     f10 = _font(10)
     f8 = _font(8)
 
@@ -85,10 +91,9 @@ def compose(
 
     flight = aircraft.display_name
     avail = W - 19
-    flight_font = f12 if d.textbbox((0, 0), flight, font=f12)[2] <= avail else f11
-    while flight and d.textbbox((0, 0), flight, font=flight_font)[2] > avail:
+    while flight and d.textbbox((0, 0), flight, font=f10)[2] > avail:
         flight = flight[:-1]
-    d.text((18, 1), flight, fill=c.color_flight, font=flight_font)
+    d.text((18, 1), flight, fill=c.color_flight, font=f10)
 
     if aircraft.distance_km:
         d.text(
@@ -108,14 +113,14 @@ def compose(
         route = f"??? - {destination}"
     else:
         route = aircraft.registration or aircraft.hex.upper()
-    d.text((2, 25), route.upper(), fill=c.color_route, font=f10)
+    d.text((2, 24), route.upper(), fill=c.color_route, font=f10)
 
     _sep(d, 37)
 
     alt_str = _alt_str(aircraft.altitude_ft, c.fl_transition_ft)
     spd_str = f"{aircraft.speed_kts} KT" if aircraft.speed_kts is not None else "-- KT"
-    d.text((2, 39), alt_str, fill=c.color_data, font=f11)
-    d.text((2, 50), spd_str, fill=c.color_data, font=f11)
+    d.text((2, 38), alt_str, fill=c.color_data, font=f10)
+    d.text((2, 50), spd_str, fill=c.color_data, font=f10)
 
     return img
 

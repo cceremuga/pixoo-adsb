@@ -1,7 +1,7 @@
 PYTHON = venv/bin/python
 BLACK  = venv/bin/black
 
-.PHONY: setup run format test
+.PHONY: setup run format test sample
 
 setup:
 	bash setup.sh
@@ -17,3 +17,6 @@ format:
 
 test:
 	venv/bin/pytest tests.py -v
+
+sample:
+	$(PYTHON) generate_sample.py

@@ -21,7 +21,7 @@
     "cache_ttl_seconds": 3600
   },
   "display": {
-    "color_flight": [66, 122, 181],
+    "color_flight": [255, 255, 255],
     "color_route": [247, 221, 125],
     "color_data": [64, 106, 175],
     "fl_transition_ft": 18000,

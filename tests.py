@@ -76,9 +76,7 @@ class TestConfigLoad(unittest.TestCase):
             "adsb": {"host": "10.0.0.1", "receiver_lat": 42.6, "receiver_lon": -73.8},
             "pixoo": {"host": "10.0.0.2", "brightness": 50},
         }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             path = f.name
         cfg = load(path)
@@ -88,9 +86,7 @@ class TestConfigLoad(unittest.TestCase):
 
     def test_color_parsed_as_tuple(self):
         data = {"display": {"color_flight": [255, 0, 0]}}
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             path = f.name
         cfg = load(path)
@@ -124,9 +120,15 @@ class TestRendererHelpers(unittest.TestCase):
         self.assertEqual(_dist_str(100.0, "mi"), "62MI")
 
     def test_fingerprint_changes_on_altitude(self):
-        ac1 = Aircraft.from_dump1090({"hex": "abc", "flight": "SWA1", "alt_baro": 10000})
-        ac2 = Aircraft.from_dump1090({"hex": "abc", "flight": "SWA1", "alt_baro": 20000})
-        self.assertNotEqual(_fingerprint(ac1, "BOS", "LAX"), _fingerprint(ac2, "BOS", "LAX"))
+        ac1 = Aircraft.from_dump1090(
+            {"hex": "abc", "flight": "SWA1", "alt_baro": 10000}
+        )
+        ac2 = Aircraft.from_dump1090(
+            {"hex": "abc", "flight": "SWA1", "alt_baro": 20000}
+        )
+        self.assertNotEqual(
+            _fingerprint(ac1, "BOS", "LAX"), _fingerprint(ac2, "BOS", "LAX")
+        )
 
     def test_fingerprint_stable_on_same_data(self):
         ac = Aircraft.from_dump1090({"hex": "abc", "flight": "SWA1", "alt_baro": 10000})
@@ -206,7 +208,7 @@ class TestFlightEnricher(unittest.TestCase):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {"route": "KBOS-KLAX"}
-        with patch.object(e._session, "get", return_value=mock_resp):
+        with patch("requests.Session.get", return_value=mock_resp):
             origin, dest = e.get_route("aabbcc", "SWA1234")
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
@@ -216,7 +218,7 @@ class TestFlightEnricher(unittest.TestCase):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {"route": "KBOS-KLAX"}
-        with patch.object(e._session, "get", return_value=mock_resp) as mock_get:
+        with patch("requests.Session.get", return_value=mock_resp) as mock_get:
             e.get_route("aabbcc", "SWA1234")
             e.get_route("aabbcc", "SWA1234")
         self.assertEqual(mock_get.call_count, 1)
@@ -235,7 +237,7 @@ class TestFlightEnricher(unittest.TestCase):
                 }
             }
         }
-        with patch.object(e._session, "get", side_effect=[fail_resp, adsbdb_resp]):
+        with patch("requests.Session.get", side_effect=[fail_resp, adsbdb_resp]):
             origin, dest = e.get_route("aabbcc", "SWA1234")
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
