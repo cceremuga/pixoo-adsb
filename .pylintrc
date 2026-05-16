@@ -1,0 +1,24 @@
+[MAIN]
+py-version = 3.10
+
+[MESSAGES CONTROL]
+disable =
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    wrong-import-order,
+    ungrouped-imports,
+    broad-exception-caught,
+    unused-argument,
+    too-many-instance-attributes
+
+[FORMAT]
+max-line-length = 88
+
+[DESIGN]
+max-args = 8
+max-locals = 20
+
+[TYPECHECK]
+ignored-modules = PIL

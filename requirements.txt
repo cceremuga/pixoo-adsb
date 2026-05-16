@@ -1,0 +1,9 @@
+Pillow
+requests
+haversine
+diskcache
+black
+isort
+mdformat
+pylint
+pytest

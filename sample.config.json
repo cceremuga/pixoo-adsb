@@ -1,0 +1,30 @@
+{
+  "adsb": {
+    "host": "192.168.1.100",
+    "port": 8080,
+    "path": "/data/aircraft.json",
+    "poll_interval": 10,
+    "receiver_lat": 0.0,
+    "receiver_lon": 0.0
+  },
+  "pixoo": {
+    "host": "192.168.1.200",
+    "brightness": 100
+  },
+  "logos": {
+    "cache_dir": "cache/logos",
+    "fetch_timeout": 5
+  },
+  "flight_data": {
+    "enabled": true,
+    "cache_dir": "cache/routes",
+    "cache_ttl_seconds": 3600
+  },
+  "display": {
+    "color_flight": [66, 122, 181],
+    "color_route": [247, 221, 125],
+    "color_data": [64, 106, 175],
+    "fl_transition_ft": 18000,
+    "distance_unit": "km"
+  }
+}
