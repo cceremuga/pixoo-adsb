@@ -7,8 +7,9 @@ from unittest.mock import MagicMock, patch
 from PIL import Image
 
 from aircraft import Aircraft
-from config import Config, DisplayConfig, OperatingHoursConfig, load
-from flight_enricher import FlightEnricher, _icao_to_display
+from config import Config, DisplayConfig, OperatingHoursConfig, SourceConfig, load
+from enrichers.base import _icao_to_display
+from flight_enricher import FlightEnricher
 from renderer import _alt_str, _dist_str, _fingerprint, compose
 
 
@@ -191,14 +192,21 @@ class TestFlightEnricher(unittest.TestCase):
         cfg = Config()
         cfg.flight_data.enabled = True
         cfg.flight_data.cache_dir = tempfile.mkdtemp()
+        sources = []
         if aerodatabox:
-            cfg.flight_data.aerodatabox_key = "test-key"
+            sources.append(
+                SourceConfig(type="aerodatabox", options={"api_key": "test-key"})
+            )
+        sources.append(SourceConfig(type="hexdb"))
+        sources.append(SourceConfig(type="adsbdb"))
+        cfg.flight_data.sources = sources
         return FlightEnricher(cfg)
 
     def test_returns_unknown_when_disabled(self):
         cfg = Config()
         cfg.flight_data.enabled = False
         cfg.flight_data.cache_dir = tempfile.mkdtemp()
+        cfg.flight_data.sources = []
         e = FlightEnricher(cfg)
         self.assertEqual(e.get_route("aabbcc", "SWA1234"), ("???", "???"))
 

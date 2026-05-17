@@ -19,12 +19,38 @@
     "enabled": true,
     "cache_dir": "cache/routes",
     "cache_ttl_seconds": 86400,
-    "aerodatabox_key": ""
+    "sources": [
+      {
+        "type": "aerodatabox",
+        "enabled": true,
+        "api_key": ""
+      },
+      {
+        "type": "hexdb",
+        "enabled": true
+      },
+      {
+        "type": "adsbdb",
+        "enabled": true
+      }
+    ]
   },
   "display": {
-    "color_flight": [255, 255, 255],
-    "color_route": [247, 221, 125],
-    "color_data": [64, 106, 175],
+    "color_flight": [
+      255,
+      255,
+      255
+    ],
+    "color_route": [
+      247,
+      221,
+      125
+    ],
+    "color_data": [
+      64,
+      106,
+      175
+    ],
     "fl_transition_ft": 18000,
     "distance_unit": "km"
   },

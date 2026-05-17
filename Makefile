@@ -16,10 +16,11 @@ emulate:
 	$(PYTHON) emulate.py --debug
 
 format:
-	$(BLACK) *.py
-	venv/bin/isort *.py
-	venv/bin/pylint *.py
+	$(BLACK) *.py enrichers/*.py
+	venv/bin/isort *.py enrichers/*.py
+	venv/bin/pylint *.py enrichers/*.py
 	venv/bin/mdformat *.md
+	$(PYTHON) -m json.tool --indent 2 sample.config.json > sample.config.json.tmp && mv sample.config.json.tmp sample.config.json
 
 test:
 	venv/bin/pytest tests.py -v

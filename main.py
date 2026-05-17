@@ -27,6 +27,47 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def _poll(cfg, adsb, enricher, logos, renderer) -> bool:
+    """Run one poll cycle. Returns True if an aircraft was found and rendered."""
+    try:
+        aircraft = adsb.fetch_nearest()
+    except Exception as e:
+        log.error("Unexpected fetch error: %s", e)
+        return False
+
+    if aircraft is None:
+        return False
+
+    log.info(
+        "Nearest: %s  %.1fkm  alt=%s  spd=%s",
+        aircraft.display_name,
+        aircraft.distance_km,
+        aircraft.altitude_ft,
+        aircraft.speed_kts,
+    )
+
+    try:
+        origin, destination = enricher.get_route(aircraft.hex, aircraft.flight)
+    except Exception as e:
+        log.debug("Route lookup error: %s", e)
+        origin, destination = "???", "???"
+
+    try:
+        logo = logos.get(aircraft.flight)
+    except Exception as e:
+        log.debug("Logo error: %s", e)
+        logo = Image.new("RGB", (16, 16), (60, 60, 60))
+
+    try:
+        updated = renderer.render(aircraft, logo, origin, destination)
+        if updated:
+            log.info("Display updated [%s -> %s]", origin, destination)
+    except Exception as e:
+        log.error("Render error: %s", e)
+
+    return True
+
+
 def main() -> None:
     args = parse_args()
     if args.debug:
@@ -61,13 +102,8 @@ def main() -> None:
             was_active = True
             consecutive_failures = 0
 
-        try:
-            aircraft = adsb.fetch_nearest()
-        except Exception as e:
-            log.error("Unexpected fetch error: %s", e)
-            aircraft = None
-
-        if aircraft is None:
+        found = _poll(cfg, adsb, enricher, logos, renderer)
+        if not found:
             consecutive_failures += 1
             if consecutive_failures == 1:
                 log.warning("No aircraft data")
@@ -75,36 +111,8 @@ def main() -> None:
                     renderer.show_message("ADSB", "OFFLINE")
                 except Exception as e:
                     log.error("Renderer error: %s", e)
-            time.sleep(cfg.adsb.poll_interval)
-            continue
-
-        consecutive_failures = 0
-        log.info(
-            "Nearest: %s  %.1fkm  alt=%s  spd=%s",
-            aircraft.display_name,
-            aircraft.distance_km,
-            aircraft.altitude_ft,
-            aircraft.speed_kts,
-        )
-
-        try:
-            origin, destination = enricher.get_route(aircraft.hex, aircraft.flight)
-        except Exception as e:
-            log.debug("Route lookup error: %s", e)
-            origin, destination = "???", "???"
-
-        try:
-            logo = logos.get(aircraft.flight)
-        except Exception as e:
-            log.debug("Logo error: %s", e)
-            logo = Image.new("RGB", (16, 16), (60, 60, 60))
-
-        try:
-            updated = renderer.render(aircraft, logo, origin, destination)
-            if updated:
-                log.info("Display updated [%s -> %s]", origin, destination)
-        except Exception as e:
-            log.error("Render error: %s", e)
+        else:
+            consecutive_failures = 0
 
         time.sleep(cfg.adsb.poll_interval)
 

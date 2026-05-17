@@ -40,11 +40,26 @@ class DisplayConfig:
 
 
 @dataclass
+class SourceConfig:
+    type: str
+    enabled: bool = True
+    options: dict = field(default_factory=dict)
+
+
+def _default_sources() -> list:
+    return [
+        SourceConfig(type="aerodatabox"),
+        SourceConfig(type="hexdb"),
+        SourceConfig(type="adsbdb"),
+    ]
+
+
+@dataclass
 class FlightDataConfig:
     enabled: bool = True
     cache_dir: str = "cache/routes"
-    cache_ttl_seconds: int = 3600
-    aerodatabox_key: str = ""
+    cache_ttl_seconds: int = 86400
+    sources: list = field(default_factory=_default_sources)
 
 
 @dataclass
@@ -78,6 +93,20 @@ class Config:
     @property
     def adsb_url(self) -> str:
         return f"http://{self.adsb.host}:{self.adsb.port}{self.adsb.path}"
+
+
+def _parse_sources(raw: list) -> list:
+    result = []
+    for s in raw:
+        if not isinstance(s, dict) or "type" not in s:
+            continue
+        options = {k: v for k, v in s.items() if k not in ("type", "enabled")}
+        result.append(
+            SourceConfig(
+                type=s["type"], enabled=s.get("enabled", True), options=options
+            )
+        )
+    return result or _default_sources()
 
 
 def load(path: str = "config.json") -> Config:
@@ -129,7 +158,11 @@ def load(path: str = "config.json") -> Config:
             cache_ttl_seconds=get(
                 fd, "cache_ttl_seconds", d.flight_data.cache_ttl_seconds
             ),
-            aerodatabox_key=get(fd, "aerodatabox_key", d.flight_data.aerodatabox_key),
+            sources=(
+                _parse_sources(fd.get("sources"))
+                if "sources" in fd
+                else _default_sources()
+            ),
         ),
         display=DisplayConfig(
             color_flight=color(di, "color_flight", d.display.color_flight),

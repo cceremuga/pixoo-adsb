@@ -39,7 +39,7 @@ All settings live in `config.json`. See `sample.config.json` for a fully annotat
 | `display` | `color_route` | RGB array for origin/destination |
 | `display` | `color_data` | RGB array for altitude and speed |
 | `flight_data` | `enabled` | Toggle route enrichment on/off |
-| `flight_data` | `aerodatabox_key` | api.market key for AeroDataBox (optional, improves accuracy) |
+| `flight_data` | `sources` | Ordered array of enrichment sources (see Route Enrichment) |
 | `operating_hours` | `enabled` | Restrict operation to a time window (default: false) |
 | `operating_hours` | `start` / `end` | 24-hour times e.g. `"07:00"` / `"23:00"`; overnight ranges supported |
 
@@ -61,40 +61,39 @@ When no route is found, the aircraft tail number is shown in place of origin/des
 
 ## Route Enrichment
 
-Routes are looked up automatically and cached to disk for the duration configured in `flight_data.cache_ttl_seconds`.
+Routes are looked up via an ordered list of sources defined in `flight_data.sources`. Each source is tried in turn; the first hit wins. Results are cached to disk for `flight_data.cache_ttl_seconds` seconds.
 
-### Free (no key required)
+Sources are pluggable: the three built-in types are `aerodatabox`, `hexdb`, and `adsbdb`. Custom sources can be registered at startup via `enrichers.register("mytype", MySource)` and then referenced by name in config.
 
-1. **[HexDB](https://hexdb.io)**: static callsign→route database
-1. **[AdsbDB](https://adsbdb.com)**: fallback static database
+### Built-in sources
 
-These work without any configuration but rely on static data that can be stale or missing for newer/regional flights.
+**`hexdb`** and **`adsbdb`** are free and require no options. They use static callsign→route databases and work out of the box.
 
-### Optional: AeroDataBox via api.market (paid)
-
-For significantly better route accuracy, you can enable [AeroDataBox](https://api.market/store/aedbx/aerodatabox) through [api.market](https://api.market). It queries live flight data for today and yesterday, making it much more reliable for routes that static databases miss.
+**`aerodatabox`** queries live flight data via [AeroDataBox on api.market](https://api.market/store/aedbx/aerodatabox) (paid). It is significantly more accurate but requires an API key:
 
 1. Sign up at [api.market](https://api.market) and subscribe to the AeroDataBox API
-2. Copy your API key and add it to `config.json`:
+1. Set `api_key` in your config:
 
 ```json
 "flight_data": {
-  "aerodatabox_key": "your-api-market-key-here"
+  "sources": [
+    { "type": "aerodatabox", "enabled": true, "api_key": "your-key-here" },
+    { "type": "hexdb",        "enabled": true },
+    { "type": "adsbdb",       "enabled": true }
+  ]
 }
 ```
 
-When a key is present, AeroDataBox is tried first; the free APIs serve as fallback. Remove the key or leave it empty to use only the free sources.
-
-The configuration table also includes:
-
-| Section | Key | Description |
-|---|---|---|
-| `flight_data` | `aerodatabox_key` | api.market key for AeroDataBox (optional) |
-| `flight_data` | `cache_ttl_seconds` | How long to cache route results (default: 3600) |
+Leave `api_key` empty or set `"enabled": false` to skip AeroDataBox. Reorder the array to change cascade priority.
 
 ______________________________________________________________________
 
 ## Release Notes
+
+### v1.3.0
+
+- **Pluggable enrichment sources**: enrichers are now modular: each source lives in its own file (`enrichers/aerodatabox.py`, `enrichers/hexdb.py`, `enrichers/adsbdb.py`) and implements a common `EnrichmentSource` interface. Custom sources can be registered at runtime via `enrichers.register()` and referenced by name in config.
+- **Config-driven source ordering**: `flight_data.sources` is now an explicit ordered array; cascade priority, per-source options (e.g. `api_key`), and enable/disable are all controlled per-entry in config.
 
 ### v1.2.0
 
