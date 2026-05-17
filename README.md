@@ -35,9 +35,11 @@ All settings live in `config.json`. See `sample.config.json` for a fully annotat
 | `pixoo` | `brightness` | 0–100 |
 | `display` | `distance_unit` | `"km"` or `"mi"` |
 | `display` | `fl_transition_ft` | Altitude above which FL notation is used (default: 18000) |
-| `display` | `color_flight` | RGB array for flight number and distance |
-| `display` | `color_route` | RGB array for origin/destination |
-| `display` | `color_data` | RGB array for altitude and speed |
+| `display` | `color_background` | Hex color for background (e.g. `"#000000"`) |
+| `display` | `color_separator` | Hex color for the separator lines (default: `"#1e1e1e"`) |
+| `display` | `color_flight` | Hex color for flight number and distance |
+| `display` | `color_route` | Hex color for origin/destination |
+| `display` | `color_data` | Hex color for altitude and speed |
 | `flight_data` | `enabled` | Toggle route enrichment on/off |
 | `flight_data` | `sources` | Ordered array of enrichment sources (see Route Enrichment) |
 | `operating_hours` | `enabled` | Restrict operation to a time window (default: false) |
@@ -91,6 +93,12 @@ Both paid sources are disabled by default. Set `"enabled": true` and supply an `
 ______________________________________________________________________
 
 ## Release Notes
+
+### v1.5.0
+
+- **Hex color values**: all color config fields now accept hex strings (e.g. `"#f7dd7d"`) in addition to RGB arrays. CSS named colors (e.g. `"white"`) are also supported via Pillow's `ImageColor`.
+- **Configurable background color**: added `display.color_background` to control the frame background (default: `"#000000"`), applied to both the flight display and the ADSB OFFLINE message screen.
+- **Configurable separator color**: added `display.color_separator` to control the horizontal divider lines between display sections (default: `"#1e1e1e"`).
 
 ### v1.4.0
 

@@ -40,8 +40,8 @@ def _draw_text_centre(draw, text, y, font, colour):
     draw.text((x, y), text, fill=colour, font=font)
 
 
-def _sep(draw, y):
-    draw.line([(0, y), (W - 1, y)], fill=(30, 30, 30))
+def _sep(draw, y, colour):
+    draw.line([(0, y), (W - 1, y)], fill=colour)
 
 
 class Renderer:
@@ -64,7 +64,7 @@ class Renderer:
         return True
 
     def show_message(self, line1: str, line2: str, colour=(180, 50, 50)) -> None:
-        img = Image.new("RGB", (W, H), (0, 0, 0))
+        img = Image.new("RGB", (W, H), self._colors.color_background)
         d = ImageDraw.Draw(img)
         _draw_text_centre(d, line1, 22, _font(13), colour)
         _draw_text_centre(d, line2, 37, _font(13), colour)
@@ -84,7 +84,7 @@ def compose(
 ) -> Image.Image:
     c = colors if colors is not None else DisplayConfig()
 
-    img = Image.new("RGB", (W, H), (0, 0, 0))
+    img = Image.new("RGB", (W, H), c.color_background)
     d = ImageDraw.Draw(img)
 
     f10 = _font(10)
@@ -106,7 +106,7 @@ def compose(
             font=f8,
         )
 
-    _sep(d, 23)
+    _sep(d, 23, c.color_separator)
 
     if origin != "???" and destination != "???":
         route = f"{origin} - {destination}"
@@ -118,7 +118,7 @@ def compose(
         route = aircraft.registration or aircraft.hex.upper()
     d.text((2, 24), route.upper(), fill=c.color_route, font=f10)
 
-    _sep(d, 38)
+    _sep(d, 38, c.color_separator)
 
     alt_str = _alt_str(aircraft.altitude_ft, c.fl_transition_ft)
     spd_str = f"{aircraft.speed_kts} KT" if aircraft.speed_kts is not None else "-- KT"

@@ -5,6 +5,8 @@ import json
 import logging
 from dataclasses import dataclass, field
 
+from PIL import ImageColor
+
 log = logging.getLogger(__name__)
 
 
@@ -32,6 +34,8 @@ class LogosConfig:
 
 @dataclass
 class DisplayConfig:
+    color_background: tuple = (0, 0, 0)
+    color_separator: tuple = (30, 30, 30)
     color_flight: tuple = (66, 122, 181)
     color_route: tuple = (247, 221, 125)
     color_data: tuple = (64, 106, 175)
@@ -123,6 +127,12 @@ def load(path: str = "config.json") -> Config:
 
     def color(section: dict, key: str, default: tuple) -> tuple:
         val = section.get(key)
+        if isinstance(val, str):
+            try:
+                return ImageColor.getrgb(val)[:3]
+            except (ValueError, AttributeError):
+                log.warning("Invalid color value for %s: %r", key, val)
+                return default
         if isinstance(val, list) and len(val) == 3:
             return tuple(val)
         return default
@@ -165,6 +175,8 @@ def load(path: str = "config.json") -> Config:
             ),
         ),
         display=DisplayConfig(
+            color_background=color(di, "color_background", d.display.color_background),
+            color_separator=color(di, "color_separator", d.display.color_separator),
             color_flight=color(di, "color_flight", d.display.color_flight),
             color_route=color(di, "color_route", d.display.color_route),
             color_data=color(di, "color_data", d.display.color_data),

@@ -86,13 +86,21 @@ class TestConfigLoad(unittest.TestCase):
         self.assertEqual(cfg.pixoo.brightness, 50)
         self.assertEqual(cfg.adsb.port, 8080)
 
-    def test_color_parsed_as_tuple(self):
-        data = {"display": {"color_flight": [255, 0, 0]}}
+    def test_color_parsed_from_hex(self):
+        data = {"display": {"color_flight": "#ff0000"}}
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             path = f.name
         cfg = load(path)
         self.assertEqual(cfg.display.color_flight, (255, 0, 0))
+
+    def test_color_parsed_from_array(self):
+        data = {"display": {"color_flight": [0, 255, 0]}}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(data, f)
+            path = f.name
+        cfg = load(path)
+        self.assertEqual(cfg.display.color_flight, (0, 255, 0))
 
     def test_adsb_url_property(self):
         cfg = Config()

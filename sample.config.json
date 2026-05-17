@@ -41,21 +41,11 @@
     ]
   },
   "display": {
-    "color_flight": [
-      255,
-      255,
-      255
-    ],
-    "color_route": [
-      247,
-      221,
-      125
-    ],
-    "color_data": [
-      64,
-      106,
-      175
-    ],
+    "color_background": "#112D4E",
+    "color_separator": "#0C223B",
+    "color_flight": "#F9F7F7",
+    "color_route": "#DBE2EF",
+    "color_data": "#DBE2EF",
     "fl_transition_ft": 18000,
     "distance_unit": "km"
   },
