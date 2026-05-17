@@ -21,8 +21,13 @@
     "cache_ttl_seconds": 86400,
     "sources": [
       {
+        "type": "aeroapi",
+        "enabled": false,
+        "api_key": ""
+      },
+      {
         "type": "aerodatabox",
-        "enabled": true,
+        "enabled": false,
         "api_key": ""
       },
       {

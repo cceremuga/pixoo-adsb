@@ -1,11 +1,13 @@
 from typing import Type
 
 from enrichers.adsbdb import AdsbDBSource
+from enrichers.aeroapi import AeroAPISource
 from enrichers.aerodatabox import AeroDataBoxSource
 from enrichers.base import EnrichmentSource
 from enrichers.hexdb import HexDBSource
 
 REGISTRY: dict[str, Type[EnrichmentSource]] = {
+    "aeroapi": AeroAPISource,
     "aerodatabox": AeroDataBoxSource,
     "hexdb": HexDBSource,
     "adsbdb": AdsbDBSource,

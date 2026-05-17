@@ -63,32 +63,38 @@ When no route is found, the aircraft tail number is shown in place of origin/des
 
 Routes are looked up via an ordered list of sources defined in `flight_data.sources`. Each source is tried in turn; the first hit wins. Results are cached to disk for `flight_data.cache_ttl_seconds` seconds.
 
-Sources are pluggable: the three built-in types are `aerodatabox`, `hexdb`, and `adsbdb`. Custom sources can be registered at startup via `enrichers.register("mytype", MySource)` and then referenced by name in config.
+Sources are pluggable: built-in types are `aeroapi`, `aerodatabox`, `hexdb`, and `adsbdb`. Custom sources can be registered at startup via `enrichers.register("mytype", MySource)` and then referenced by name in config.
 
-### Built-in sources
+### Free sources (no key required)
 
-**`hexdb`** and **`adsbdb`** are free and require no options. They use static callsign→route databases and work out of the box.
+**`hexdb`** and **`adsbdb`** use static callsign→route databases and work out of the box. They are reliable for common routes but can be stale or missing for newer/regional flights.
 
-**`aerodatabox`** queries live flight data via [AeroDataBox on api.market](https://api.market/store/aedbx/aerodatabox) (paid). It is significantly more accurate but requires an API key:
+### Paid sources
 
-1. Sign up at [api.market](https://api.market) and subscribe to the AeroDataBox API
-1. Set `api_key` in your config:
+Both paid sources are disabled by default. Set `"enabled": true` and supply an `api_key` to activate either one. Place whichever you subscribe to above the free sources in the array.
+
+**`aeroapi`** — [FlightAware AeroAPI](https://www.flightaware.com/aeroapi/). Queries live flights by callsign ident. Auth header: `x-apikey`.
+
+**`aerodatabox`** — [AeroDataBox via api.market](https://api.market/store/aedbx/aerodatabox). Queries live flights for today and yesterday. Auth header: `x-api-market-key`.
 
 ```json
 "flight_data": {
   "sources": [
-    { "type": "aerodatabox", "enabled": true, "api_key": "your-key-here" },
-    { "type": "hexdb",        "enabled": true },
-    { "type": "adsbdb",       "enabled": true }
+    { "type": "aeroapi",     "enabled": false, "api_key": "" },
+    { "type": "aerodatabox", "enabled": false, "api_key": "" },
+    { "type": "hexdb",       "enabled": true },
+    { "type": "adsbdb",      "enabled": true }
   ]
 }
 ```
 
-Leave `api_key` empty or set `"enabled": false` to skip AeroDataBox. Reorder the array to change cascade priority.
-
 ______________________________________________________________________
 
 ## Release Notes
+
+### v1.4.0
+
+- **FlightAware AeroAPI enrichment source**: new `aeroapi` source queries live flight data via the [FlightAware AeroAPI](https://www.flightaware.com/aeroapi/). Available free for personal use under FlightAware's personal-use tier (rate-limited; check their terms). Disabled by default; set `"enabled": true` and supply an `api_key` in the sources config to activate.
 
 ### v1.3.0
 

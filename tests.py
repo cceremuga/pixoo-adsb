@@ -286,6 +286,77 @@ class TestFlightEnricher(unittest.TestCase):
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
 
+    def _aeroapi_ok(self, origin_iata, dest_iata):
+        r = MagicMock()
+        r.status_code = 200
+        r.json.return_value = {
+            "flights": [
+                {
+                    "origin": {
+                        "code_iata": origin_iata,
+                        "code_icao": f"K{origin_iata}",
+                    },
+                    "destination": {
+                        "code_iata": dest_iata,
+                        "code_icao": f"K{dest_iata}",
+                    },
+                }
+            ]
+        }
+        return r
+
+    def test_aeroapi_route_parsed(self):
+        cfg = Config()
+        cfg.flight_data.enabled = True
+        cfg.flight_data.cache_dir = tempfile.mkdtemp()
+        cfg.flight_data.sources = [
+            SourceConfig(type="aeroapi", options={"api_key": "test-key"})
+        ]
+        e = FlightEnricher(cfg)
+        with patch("requests.Session.get", return_value=self._aeroapi_ok("BOS", "LAX")):
+            origin, dest = e.get_route("aabbcc", "UAL123")
+        self.assertEqual(origin, "BOS")
+        self.assertEqual(dest, "LAX")
+
+    def test_aeroapi_skipped_without_key(self):
+        cfg = Config()
+        cfg.flight_data.enabled = True
+        cfg.flight_data.cache_dir = tempfile.mkdtemp()
+        cfg.flight_data.sources = [
+            SourceConfig(type="aeroapi", options={}),
+            SourceConfig(type="hexdb"),
+        ]
+        e = FlightEnricher(cfg)
+        hexdb_resp = MagicMock()
+        hexdb_resp.status_code = 200
+        hexdb_resp.json.return_value = {"route": "KBOS-KLAX"}
+        with patch("requests.Session.get", return_value=hexdb_resp) as mock_get:
+            origin, _ = e.get_route("aabbcc", "UAL123")
+        self.assertEqual(mock_get.call_count, 1)
+        self.assertEqual(origin, "BOS")
+
+    def test_aeroapi_skips_flights_without_route(self):
+        cfg = Config()
+        cfg.flight_data.enabled = True
+        cfg.flight_data.cache_dir = tempfile.mkdtemp()
+        cfg.flight_data.sources = [
+            SourceConfig(type="aeroapi", options={"api_key": "test-key"}),
+            SourceConfig(type="hexdb"),
+        ]
+        e = FlightEnricher(cfg)
+        aeroapi_empty = MagicMock()
+        aeroapi_empty.status_code = 200
+        aeroapi_empty.json.return_value = {
+            "flights": [{"origin": None, "destination": None}]
+        }
+        hexdb_resp = MagicMock()
+        hexdb_resp.status_code = 200
+        hexdb_resp.json.return_value = {"route": "KBOS-KLAX"}
+        with patch("requests.Session.get", side_effect=[aeroapi_empty, hexdb_resp]):
+            origin, dest = e.get_route("aabbcc", "UAL123")
+        self.assertEqual(origin, "BOS")
+        self.assertEqual(dest, "LAX")
+
 
 class TestOperatingHours(unittest.TestCase):
     def _oh(self, start, end, enabled=True):
