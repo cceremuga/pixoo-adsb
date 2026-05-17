@@ -96,7 +96,7 @@ def compose(
     avail = W - 19
     while flight and d.textbbox((0, 0), flight, font=f10)[2] > avail:
         flight = flight[:-1]
-    d.text((21, 0), flight, fill=c.color_flight, font=f10)
+    d.text((21, -1), flight, fill=c.color_flight, font=f10)
 
     if aircraft.distance_km:
         d.text(
@@ -123,7 +123,7 @@ def compose(
     alt_str = _alt_str(aircraft.altitude_ft, c.fl_transition_ft)
     spd_str = f"{aircraft.speed_kts} KT" if aircraft.speed_kts is not None else "-- KT"
     d.text((2, 38), alt_str, fill=c.color_data, font=f10)
-    d.text((2, 50), spd_str, fill=c.color_data, font=f10)
+    d.text((2, 51), spd_str, fill=c.color_data, font=f10)
 
     return img
 
