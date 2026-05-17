@@ -18,7 +18,7 @@
   "flight_data": {
     "enabled": true,
     "cache_dir": "cache/routes",
-    "cache_ttl_seconds": 86400,
+    "cache_ttl_seconds": 10800,
     "sources": [
       {
         "type": "aeroapi",

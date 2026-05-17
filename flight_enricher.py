@@ -31,18 +31,18 @@ class FlightEnricher:
             return "???", "???"
 
         cached = self._cache.get(callsign)
-        log.debug(
-            "get_route %s (hex=%s): %s",
-            callsign,
-            hex_code,
-            (
-                f"cache hit {cached}"
-                if cached is not None
-                else "cache miss, querying sources"
-            ),
-        )
         if cached is not None:
+            if cached == ("???", "???"):
+                log.debug("get_route %s (hex=%s): cached miss", callsign, hex_code)
+            else:
+                log.debug(
+                    "get_route %s (hex=%s): cache hit %s", callsign, hex_code, cached
+                )
             return cached
+
+        log.debug(
+            "get_route %s (hex=%s): cache miss, querying sources", callsign, hex_code
+        )
 
         for source in self._sources:
             result = source.get_route(callsign)
@@ -53,4 +53,6 @@ class FlightEnricher:
                 self._cache.set(callsign, result, expire=self._ttl)
                 return result
 
+        log.debug("get_route %s: all sources exhausted, caching miss", callsign)
+        self._cache.set(callsign, ("???", "???"), expire=self._ttl)
         return "???", "???"

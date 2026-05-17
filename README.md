@@ -94,6 +94,14 @@ ______________________________________________________________________
 
 ## Release Notes
 
+### v1.7.0
+
+- **Logo background fix**: airline logos (transparent PNGs) are now composited against `display.color_background` instead of a hardcoded black. The cache key includes the background color, so changing the color automatically fetches fresh composited logos.
+
+### v1.6.0
+
+- **Null enrichment caching**: when all sources fail to find a route, the miss is now cached for the full `cache_ttl_seconds` duration. Subsequent polls for the same callsign return immediately without hitting any APIs.
+
 ### v1.5.0
 
 - **Hex color values**: all color config fields now accept hex strings (e.g. `"#f7dd7d"`) in addition to RGB arrays. CSS named colors (e.g. `"white"`) are also supported via Pillow's `ImageColor`.

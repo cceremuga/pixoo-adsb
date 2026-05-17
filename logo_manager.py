@@ -42,6 +42,8 @@ class LogoManager:
     def __init__(self, cfg: Config):
         self._cache_dir = cfg.logos.cache_dir
         self._timeout = cfg.logos.fetch_timeout
+        self._bg = cfg.display.color_background
+        self._bg_hex = f"{self._bg[0]:02x}{self._bg[1]:02x}{self._bg[2]:02x}"
         self._session = requests.Session()
         self._session.headers["User-Agent"] = "pixoo-adsb/1.0"
         os.makedirs(self._cache_dir, exist_ok=True)
@@ -51,7 +53,7 @@ class LogoManager:
         if not icao3:
             return _placeholder("?", (80, 80, 80))
 
-        cache_path = os.path.join(self._cache_dir, f"{icao3}.png")
+        cache_path = os.path.join(self._cache_dir, f"{icao3}_{self._bg_hex}.png")
         if os.path.exists(cache_path):
             try:
                 return (
@@ -80,7 +82,7 @@ class LogoManager:
                 if resp.status_code != 200:
                     continue
                 img = Image.open(BytesIO(resp.content)).convert("RGBA")
-                bg = Image.new("RGB", img.size, (0, 0, 0))
+                bg = Image.new("RGB", img.size, self._bg)
                 bg.paste(img, mask=img.split()[3])
                 return bg.resize(LOGO_SIZE, Image.NEAREST)
             except Exception as e:

@@ -265,6 +265,17 @@ class TestFlightEnricher(unittest.TestCase):
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
 
+    def test_null_result_cached_after_miss(self):
+        e = self._enricher()
+        fail = MagicMock()
+        fail.status_code = 404
+        with patch("requests.Session.get", return_value=fail) as mock_get:
+            r1 = e.get_route("aabbcc", "SWA1234")
+            r2 = e.get_route("aabbcc", "SWA1234")
+        self.assertEqual(r1, ("???", "???"))
+        self.assertEqual(r2, ("???", "???"))
+        self.assertEqual(mock_get.call_count, 2)
+
     def test_result_cached_after_first_lookup(self):
         e = self._enricher()
         hexdb_resp = MagicMock()
