@@ -40,6 +40,8 @@ All settings live in `config.json`. See `sample.config.json` for a fully annotat
 | `display` | `color_data` | RGB array for altitude and speed |
 | `flight_data` | `enabled` | Toggle route enrichment on/off |
 | `flight_data` | `aerodatabox_key` | api.market key for AeroDataBox (optional, improves accuracy) |
+| `operating_hours` | `enabled` | Restrict operation to a time window (default: false) |
+| `operating_hours` | `start` / `end` | 24-hour times e.g. `"07:00"` / `"23:00"`; overnight ranges supported |
 
 ## Display Layout
 
@@ -63,8 +65,8 @@ Routes are looked up automatically and cached to disk for the duration configure
 
 ### Free (no key required)
 
-1. **[HexDB](https://hexdb.io)** — static callsign→route database
-1. **[AdsbDB](https://adsbdb.com)** — fallback static database
+1. **[HexDB](https://hexdb.io)**: static callsign→route database
+1. **[AdsbDB](https://adsbdb.com)**: fallback static database
 
 These work without any configuration but rely on static data that can be stale or missing for newer/regional flights.
 
@@ -94,7 +96,19 @@ ______________________________________________________________________
 
 ## Release Notes
 
-### v1.0.0 — Initial Release
+### v1.2.0
+
+- **Operating hours**: optionally restrict the script to a configured time window (`operating_hours.start` / `operating_hours.end`). Overnight ranges supported (e.g. 22:00–06:00). Disabled by default; the script is idle outside the window and resumes automatically.
+
+### v1.1.0
+
+- **AeroDataBox enrichment**: optional live route lookups via [AeroDataBox on api.market](https://api.market/store/aedbx/aerodatabox). Queries today and yesterday, then falls back to the free static sources. Significantly improves accuracy for routes the static databases miss or have wrong.
+- **Improved ICAO→IATA conversion**: full airport lookup table via the `airportsdata` package replaces heuristic prefix stripping; European and other non-US/CA airports now resolve correctly.
+- **Local emulator**: `make emulate` opens a 4× upscaled pygame window running the full display pipeline locally, no Pixoo64 required.
+- **Pixel-accurate rendering**: disabled text anti-aliasing (`fontmode="1"`) and switched all image scaling to nearest-neighbor for a crisp LED-matrix look.
+- **Font resilience**: graceful fallback to the PIL built-in font if JetBrains Mono is missing or corrupt; `.gitattributes` prevents TTF corruption on clone.
+
+### v1.0.0: Initial Release
 
 First working release. Core features:
 
@@ -123,4 +137,4 @@ Portions of this project were written with the assistance of agentic LLM tooling
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0: see [LICENSE](LICENSE).

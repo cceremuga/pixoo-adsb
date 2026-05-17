@@ -54,8 +54,20 @@ def poll_loop(cfg) -> None:
     enricher = FlightEnricher(cfg)
     logos = LogoManager(cfg)
     last_fp = None
+    was_active = True
 
     while True:
+        if not cfg.operating_hours.is_active():
+            if was_active:
+                log.info("Outside operating hours — going idle")
+                was_active = False
+            time.sleep(60)
+            continue
+
+        if not was_active:
+            log.info("Operating hours resumed")
+            was_active = True
+
         try:
             aircraft = adsb.fetch_nearest()
         except Exception as e:

@@ -27,5 +27,10 @@
     "color_data": [64, 106, 175],
     "fl_transition_ft": 18000,
     "distance_unit": "km"
+  },
+  "operating_hours": {
+    "enabled": false,
+    "start": "07:00",
+    "end": "23:00"
   }
 }

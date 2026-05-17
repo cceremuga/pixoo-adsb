@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 from dataclasses import dataclass, field
@@ -47,12 +48,32 @@ class FlightDataConfig:
 
 
 @dataclass
+class OperatingHoursConfig:
+    enabled: bool = False
+    start: str = "07:00"
+    end: str = "23:00"
+
+    def is_active(self, now: datetime.time | None = None) -> bool:
+        if not self.enabled:
+            return True
+        if now is None:
+            now = datetime.datetime.now().time()
+        t_start = datetime.time.fromisoformat(self.start)
+        t_end = datetime.time.fromisoformat(self.end)
+        if t_start <= t_end:
+            return t_start <= now <= t_end
+        # overnight range: active after start OR before end
+        return now >= t_start or now <= t_end
+
+
+@dataclass
 class Config:
     adsb: AdsbConfig = field(default_factory=AdsbConfig)
     pixoo: PixooConfig = field(default_factory=PixooConfig)
     logos: LogosConfig = field(default_factory=LogosConfig)
     flight_data: FlightDataConfig = field(default_factory=FlightDataConfig)
     display: DisplayConfig = field(default_factory=DisplayConfig)
+    operating_hours: OperatingHoursConfig = field(default_factory=OperatingHoursConfig)
 
     @property
     def adsb_url(self) -> str:
@@ -82,6 +103,7 @@ def load(path: str = "config.json") -> Config:
     lo = data.get("logos", {})
     fd = data.get("flight_data", {})
     di = data.get("display", {})
+    oh = data.get("operating_hours", {})
     d = defaults
 
     cfg = Config(
@@ -115,6 +137,11 @@ def load(path: str = "config.json") -> Config:
             color_data=color(di, "color_data", d.display.color_data),
             fl_transition_ft=get(di, "fl_transition_ft", d.display.fl_transition_ft),
             distance_unit=get(di, "distance_unit", d.display.distance_unit),
+        ),
+        operating_hours=OperatingHoursConfig(
+            enabled=get(oh, "enabled", d.operating_hours.enabled),
+            start=get(oh, "start", d.operating_hours.start),
+            end=get(oh, "end", d.operating_hours.end),
         ),
     )
 

@@ -1,3 +1,4 @@
+import datetime
 import json
 import tempfile
 import unittest
@@ -6,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from PIL import Image
 
 from aircraft import Aircraft
-from config import Config, DisplayConfig, load
+from config import Config, DisplayConfig, OperatingHoursConfig, load
 from flight_enricher import FlightEnricher, _icao_to_display
 from renderer import _alt_str, _dist_str, _fingerprint, compose
 
@@ -276,6 +277,54 @@ class TestFlightEnricher(unittest.TestCase):
             origin, dest = e.get_route("aabbcc", "SWA1234")
         self.assertEqual(origin, "BOS")
         self.assertEqual(dest, "LAX")
+
+
+class TestOperatingHours(unittest.TestCase):
+    def _oh(self, start, end, enabled=True):
+        return OperatingHoursConfig(enabled=enabled, start=start, end=end)
+
+    def test_disabled_always_active(self):
+        oh = self._oh("09:00", "17:00", enabled=False)
+        self.assertTrue(oh.is_active(datetime.time(3, 0)))
+        self.assertTrue(oh.is_active(datetime.time(20, 0)))
+
+    def test_within_daytime_window(self):
+        oh = self._oh("07:00", "23:00")
+        self.assertTrue(oh.is_active(datetime.time(7, 0)))
+        self.assertTrue(oh.is_active(datetime.time(12, 0)))
+        self.assertTrue(oh.is_active(datetime.time(23, 0)))
+
+    def test_outside_daytime_window(self):
+        oh = self._oh("07:00", "23:00")
+        self.assertFalse(oh.is_active(datetime.time(6, 59)))
+        self.assertFalse(oh.is_active(datetime.time(23, 1)))
+
+    def test_overnight_window_active_after_start(self):
+        oh = self._oh("22:00", "06:00")
+        self.assertTrue(oh.is_active(datetime.time(22, 30)))
+        self.assertTrue(oh.is_active(datetime.time(0, 0)))
+        self.assertTrue(oh.is_active(datetime.time(5, 59)))
+
+    def test_overnight_window_inactive_in_middle_of_day(self):
+        oh = self._oh("22:00", "06:00")
+        self.assertFalse(oh.is_active(datetime.time(6, 1)))
+        self.assertFalse(oh.is_active(datetime.time(12, 0)))
+        self.assertFalse(oh.is_active(datetime.time(21, 59)))
+
+    def test_config_load_operating_hours(self):
+        data = {"operating_hours": {"enabled": True, "start": "08:00", "end": "20:00"}}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(data, f)
+            path = f.name
+        cfg = load(path)
+        self.assertTrue(cfg.operating_hours.enabled)
+        self.assertEqual(cfg.operating_hours.start, "08:00")
+        self.assertEqual(cfg.operating_hours.end, "20:00")
+
+    def test_config_defaults_to_disabled(self):
+        cfg = Config()
+        self.assertFalse(cfg.operating_hours.enabled)
+        self.assertTrue(cfg.operating_hours.is_active(datetime.time(3, 0)))
 
 
 class TestIcaoToDisplay(unittest.TestCase):

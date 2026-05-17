@@ -39,15 +39,28 @@ def main() -> None:
     renderer = Renderer(cfg)
 
     log.info(
-        "Starting — polling every %ds | ADSB %s | Pixoo %s",
+        "Starting, polling every %ds | ADSB %s | Pixoo %s",
         cfg.adsb.poll_interval,
         cfg.adsb.host,
         cfg.pixoo.host,
     )
 
     consecutive_failures = 0
+    was_active = True
 
     while True:
+        if not cfg.operating_hours.is_active():
+            if was_active:
+                log.info("Outside operating hours, going idle")
+                was_active = False
+            time.sleep(60)
+            continue
+
+        if not was_active:
+            log.info("Operating hours resumed")
+            was_active = True
+            consecutive_failures = 0
+
         try:
             aircraft = adsb.fetch_nearest()
         except Exception as e:
