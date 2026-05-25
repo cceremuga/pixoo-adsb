@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from aircraft import Aircraft
 from config import load
@@ -15,14 +15,30 @@ SCALE = 6
 BORDER = 8
 GAP = 12
 W = H = 64
+SW = SH = W * SCALE
+
+_PIXEL_BORDER = (0x22, 0x22, 0x22)
+_grid_mask = Image.new("L", (SW, SH), 255)
+_gd = ImageDraw.Draw(_grid_mask)
+for _i in range(0, SW, SCALE):
+    _gd.line([(_i, 0), (_i, SH - 1)], fill=0)
+for _j in range(0, SH, SCALE):
+    _gd.line([(0, _j), (SW - 1, _j)], fill=0)
+del _gd, _i, _j
+_grid_bg = Image.new("RGB", (SW, SH), _PIXEL_BORDER)
+
+
+def _apply_pixel_grid(frame: Image.Image) -> Image.Image:
+    upscaled = frame.resize((SW, SH), Image.NEAREST)
+    return Image.composite(upscaled, _grid_bg, _grid_mask)
 
 
 def main():
     cfg = load()
     logos = LogoManager(cfg)
 
-    total_w = len(SCENARIOS) * W * SCALE + (len(SCENARIOS) - 1) * GAP + 2 * BORDER
-    total_h = H * SCALE + 2 * BORDER
+    total_w = len(SCENARIOS) * SW + (len(SCENARIOS) - 1) * GAP + 2 * BORDER
+    total_h = SH + 2 * BORDER
     canvas = Image.new("RGB", (total_w, total_h), (18, 18, 18))
 
     for i, (flight, reg, alt, spd, orig, dest, dist_km) in enumerate(SCENARIOS):
@@ -40,10 +56,7 @@ def main():
         )
         ac.distance_km = dist_km
         img = compose(ac, logos.get(flight), orig, dest, cfg.display)
-        canvas.paste(
-            img.resize((W * SCALE, H * SCALE), Image.NEAREST),
-            (BORDER + i * (W * SCALE + GAP), BORDER),
-        )
+        canvas.paste(_apply_pixel_grid(img), (BORDER + i * (SW + GAP), BORDER))
 
     canvas.save("sample.png")
     print(f"sample.png written ({canvas.width}x{canvas.height})")

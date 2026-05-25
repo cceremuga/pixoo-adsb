@@ -6,7 +6,7 @@ import threading
 import time
 
 import pygame
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import config as cfg_mod
 from adsb_client import ADSBClient
@@ -14,8 +14,19 @@ from flight_enricher import FlightEnricher
 from logo_manager import LogoManager
 from renderer import _fingerprint, compose
 
-SCALE = 4
+SCALE = 5
 W = H = 64 * SCALE
+_PIXEL_BORDER = (0x22, 0x22, 0x22)
+
+# Pre-computed grid mask: 0 (border) at every SCALE-th pixel, 255 elsewhere.
+_GRID_MASK = Image.new("L", (W, H), 255)
+_gd = ImageDraw.Draw(_GRID_MASK)
+for _i in range(0, W, SCALE):
+    _gd.line([(_i, 0), (_i, H - 1)], fill=0)
+for _j in range(0, H, SCALE):
+    _gd.line([(0, _j), (W - 1, _j)], fill=0)
+del _gd, _i, _j
+_GRID_BG = Image.new("RGB", (W, H), _PIXEL_BORDER)
 
 log = logging.getLogger("emulate")
 
@@ -47,6 +58,11 @@ _FRAME_BUF = _FrameBuffer()
 def _pil_to_surface(img: Image.Image) -> pygame.Surface:
     rgb = img.convert("RGB")
     return pygame.image.fromstring(rgb.tobytes(), rgb.size, "RGB")
+
+
+def _apply_pixel_grid(frame: Image.Image) -> Image.Image:
+    upscaled = frame.resize((W, H), Image.NEAREST)
+    return Image.composite(upscaled, _GRID_BG, _GRID_MASK)
 
 
 def poll_loop(cfg) -> None:
@@ -137,7 +153,7 @@ def main() -> None:
 
         frame = _FRAME_BUF.take()
         if frame is not None:
-            surface = _pil_to_surface(frame.resize((W, H), Image.NEAREST))
+            surface = _pil_to_surface(_apply_pixel_grid(frame))
             screen.blit(surface, (0, 0))
             pygame.display.flip()
 

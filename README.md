@@ -94,6 +94,12 @@ ______________________________________________________________________
 
 ## Release Notes
 
+### v1.8.0
+
+- **Silkscreen pixel font**: switched from JetBrains Mono to [Silkscreen](https://fonts.google.com/specimen/Silkscreen) by Jason Kottke, a bitmap-style font designed for small pixel displays. All text is now rendered at 8px uniformly.
+- **True 1-bit text rendering**: text is composited via a 1-bit mask, bypassing FreeType antialiasing entirely. Every text pixel is fully on or fully off — no blending with the background.
+- **Emulator pixel grid**: the local emulator now renders each logical pixel with a `#222222` border, simulating the diffuser panel on the real device. `make sample` applies the same effect to the preview image.
+
 ### v1.7.0
 
 - **Logo background fix**: airline logos (transparent PNGs) are now composited against `display.color_background` instead of a hardcoded black. The cache key includes the background color, so changing the color automatically fetches fresh composited logos.
@@ -146,9 +152,8 @@ ______________________________________________________________________
 
 ## Fonts
 
-Display text is rendered using [JetBrains Mono NL](https://www.jetbrains.com/legalnotice/fonts/) by JetBrains.
+Display text is rendered using [Silkscreen](https://fonts.google.com/specimen/Silkscreen) by Jason Kottke.
 Licensed under the [SIL Open Font License 1.1](fonts/OFL.txt).
-Copyright 2020 The JetBrains Mono Project Authors.
 
 ______________________________________________________________________
 
